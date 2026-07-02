@@ -40,6 +40,7 @@ export const incomingStockService = {
   list: (status) => api.get('/incoming-stock', { params: status ? { status } : {} }),
   getOne: (id) => api.get(`/incoming-stock/${id}`),
   create: (payload) => api.post('/incoming-stock', payload),
+  update: (id, payload) => api.patch(`/incoming-stock/${id}`, payload),
   updateStatus: (id, status) => api.patch(`/incoming-stock/${id}/status`, { status }),
   receive: (id, items) => api.post(`/incoming-stock/${id}/receive`, { items }),
 };

@@ -8,6 +8,8 @@ import { formatCurrency } from '../../utils/format';
 export default function PurchaseOrderFormModal({ open, onClose, onSaved, suppliers, products }) {
   const [supplierId, setSupplierId] = useState('');
   const [expectedDate, setExpectedDate] = useState('');
+  const [handlingFee, setHandlingFee] = useState('');
+  const [shippingFee, setShippingFee] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState([{ product_id: '', quantity_ordered: '', unit_cost: '' }]);
   const [saving, setSaving] = useState(false);
@@ -15,6 +17,8 @@ export default function PurchaseOrderFormModal({ open, onClose, onSaved, supplie
   const reset = () => {
     setSupplierId('');
     setExpectedDate('');
+    setHandlingFee('');
+    setShippingFee('');
     setNotes('');
     setItems([{ product_id: '', quantity_ordered: '', unit_cost: '' }]);
   };
@@ -46,6 +50,8 @@ export default function PurchaseOrderFormModal({ open, onClose, onSaved, supplie
       await incomingStockService.create({
         supplier_id: supplierId,
         expected_date: expectedDate || null,
+        handling_fee: Number(handlingFee) || 0,
+        shipping_fee: Number(shippingFee) || 0,
         notes: notes || null,
         items: validItems.map((it) => ({
           product_id: it.product_id,
@@ -80,6 +86,32 @@ export default function PurchaseOrderFormModal({ open, onClose, onSaved, supplie
           <div>
             <label className="text-sm font-medium text-ink block mb-1.5">Expected delivery date</label>
             <input type="date" className="input-field" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-ink block mb-1.5">Handling fee</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="input-field"
+              placeholder="0.00"
+              value={handlingFee}
+              onChange={(e) => setHandlingFee(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-ink block mb-1.5">Shipping fee</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="input-field"
+              placeholder="0.00"
+              value={shippingFee}
+              onChange={(e) => setShippingFee(e.target.value)}
+            />
           </div>
         </div>
 
@@ -138,9 +170,19 @@ export default function PurchaseOrderFormModal({ open, onClose, onSaved, supplie
           <textarea rows={2} className="input-field" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
 
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 items-end">
+          <div className="space-y-1">
+            <p className="text-sm text-ink-soft">Handling fee</p>
+            <p className="font-semibold text-ink">{formatCurrency(Number(handlingFee) || 0)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-ink-soft">Shipping fee</p>
+            <p className="font-semibold text-ink">{formatCurrency(Number(shippingFee) || 0)}</p>
+          </div>
+        </div>
         <div className="flex items-center justify-between border-t border-border pt-4">
           <span className="text-sm text-ink-soft">
-            Estimated total: <span className="font-semibold text-ink">{formatCurrency(total)}</span>
+            Estimated total: <span className="font-semibold text-ink">{formatCurrency(total + (Number(handlingFee) || 0) + (Number(shippingFee) || 0))}</span>
           </span>
           <div className="flex gap-2">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>

@@ -4,10 +4,10 @@ import { Loader2 } from 'lucide-react';
 import { Modal } from '../common/Primitives';
 import { financialsService } from '../../api/services';
 
-const CATEGORIES = ['rent', 'utilities', 'shipping', 'marketing', 'salaries', 'supplies', 'software', 'other'];
+const CATEGORIES = ['Shipping Fees', 'Handling Fees', 'Marketing', 'Supplies', 'Salary', 'Software'];
 
 export default function ExpenseFormModal({ open, onClose, onSaved }) {
-  const [form, setForm] = useState({ category: 'other', description: '', amount: '', expense_date: new Date().toISOString().slice(0, 10) });
+  const [form, setForm] = useState({ category: 'Shipping Fees', description: '', amount: '', expense_date: new Date().toISOString().slice(0, 10) });
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e) => {
