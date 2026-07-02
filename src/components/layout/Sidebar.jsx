@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Boxes, Truck, ShoppingCart, PiggyBank, LogOut, Package } from 'lucide-react';
+import { LayoutGrid, Boxes, Truck, ShoppingCart, PiggyBank, LogOut, Package, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { initials } from '../../utils/format';
 
@@ -10,6 +10,10 @@ const NAV_ITEMS = [
   { to: '/incoming-stock', label: 'Incoming Stock', icon: Truck },
   { to: '/sales', label: 'Sales / POS', icon: ShoppingCart },
   { to: '/financials', label: 'Financials', icon: PiggyBank },
+];
+
+const BOTTOM_NAV_ITEMS = [
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 function NavItem({ to, label, icon: Icon, end, mobile }) {
@@ -54,6 +58,11 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-3 border-t border-border">
+          <nav className="flex flex-col gap-1 mb-3">
+            {BOTTOM_NAV_ITEMS.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
+          </nav>
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold shrink-0">
               {initials(profile?.business_name || 'Seller')}
@@ -76,6 +85,9 @@ export default function Sidebar() {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border flex items-stretch pb-[env(safe-area-inset-bottom)]">
         {NAV_ITEMS.map((item) => (
+          <NavItem key={item.to} {...item} mobile />
+        ))}
+        {BOTTOM_NAV_ITEMS.map((item) => (
           <NavItem key={item.to} {...item} mobile />
         ))}
       </nav>

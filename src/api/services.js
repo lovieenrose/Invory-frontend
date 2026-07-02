@@ -69,3 +69,22 @@ export const uploadService = {
     });
   },
 };
+
+export const currencyService = {
+  listCurrencies: () => api.get('/currencies'),
+  getCurrency: (code) => api.get(`/currencies/${code}`),
+  getLatestRates: (fromCurrency, toCurrencies) =>
+    api.get('/currencies/rates/latest', {
+      params: { from_currency: fromCurrency, to_currencies: toCurrencies },
+    }),
+  getHistoricalRates: (fromCurrency, toCurrency, days) =>
+    api.get('/currencies/rates/historical', {
+      params: { from_currency: fromCurrency, to_currency: toCurrency, days },
+    }),
+  getSystemSettings: () => api.get('/settings'),
+  updateSystemSettings: (payload) => api.put('/settings', payload),
+  convertCurrency: (amount, fromCurrency, toCurrency) =>
+    api.get('/settings/convert', {
+      params: { amount, from_currency: fromCurrency, to_currency: toCurrency },
+    }),
+};
