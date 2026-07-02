@@ -24,6 +24,14 @@ export default function IncomingStock() {
     setSelectedOrder(res.data);
   };
 
+  const refreshSelectedOrder = async () => {
+    if (!selectedOrder?.id) return;
+    const res = await incomingStockService.getOne(selectedOrder.id);
+    setSelectedOrder(res.data);
+  };
+
+  const closeSelectedOrder = () => setSelectedOrder(null);
+
   return (
     <div>
       <Topbar
@@ -99,7 +107,16 @@ export default function IncomingStock() {
       </div>
 
       <PurchaseOrderFormModal open={formOpen} onClose={() => setFormOpen(false)} onSaved={reload} suppliers={suppliers} products={products} />
-      <ReceiveOrderModal open={!!selectedOrder} onClose={() => setSelectedOrder(null)} order={selectedOrder} onReceived={reload} />
+      <ReceiveOrderModal
+        open={!!selectedOrder}
+        onClose={closeSelectedOrder}
+        order={selectedOrder}
+        onReceived={() => {
+          reload();
+          closeSelectedOrder();
+        }}
+        onUpdated={refreshSelectedOrder}
+      />
     </div>
   );
 }
