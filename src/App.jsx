@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
+import { CurrencyProvider } from './context/CurrencyContext';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,6 +10,7 @@ import Inventory from './pages/Inventory';
 import IncomingStock from './pages/IncomingStock';
 import Sales from './pages/Sales';
 import Financials from './pages/Financials';
+import Settings from './pages/Settings';
 
 /**
  * Route table. Every authenticated feature module is mounted once here
@@ -25,16 +27,19 @@ export default function App() {
         path="/*"
         element={
           <ProtectedRoute>
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/incoming-stock" element={<IncomingStock />} />
-                <Route path="/sales" element={<Sales />} />
-                <Route path="/financials" element={<Financials />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </AppLayout>
+            <CurrencyProvider>
+              <AppLayout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/incoming-stock" element={<IncomingStock />} />
+                  <Route path="/sales" element={<Sales />} />
+                  <Route path="/financials" element={<Financials />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </AppLayout>
+            </CurrencyProvider>
           </ProtectedRoute>
         }
       />
