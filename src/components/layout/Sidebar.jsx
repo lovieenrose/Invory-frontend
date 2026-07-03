@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Boxes, Truck, ShoppingCart, PiggyBank, LogOut, Package, Settings } from 'lucide-react';
+import { LayoutGrid, Boxes, Truck, ShoppingCart, PiggyBank, LogOut, Package, Settings, Tags } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { initials } from '../../utils/format';
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/inventory', label: 'Inventory', icon: Boxes },
   { to: '/incoming-stock', label: 'Incoming Stock', icon: Truck },
   { to: '/sales', label: 'Sales / POS', icon: ShoppingCart },
+  { to: '/pricelist', label: 'Pricelist', icon: Tags },
   { to: '/financials', label: 'Financials', icon: PiggyBank },
 ];
 
