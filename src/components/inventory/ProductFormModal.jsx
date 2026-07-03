@@ -52,7 +52,11 @@ export default function ProductFormModal({ open, onClose, onSaved, product, cate
     if (!file) return;
     setUploading(true);
     try {
-      const res = await uploadService.productImage(file);
+      const category = categories?.find((item) => item.id === form.category_id);
+      const res = await uploadService.productImage(file, {
+        categoryId: form.category_id,
+        categoryName: category?.name,
+      });
       setForm((f) => ({ ...f, image_url: res.data.url }));
       toast.success('Image uploaded');
     } catch (err) {
