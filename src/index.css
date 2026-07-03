@@ -56,3 +56,35 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.pricelist-print-target {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.95), transparent 26%),
+    linear-gradient(135deg, var(--pl-paper), var(--pl-secondary));
+  color: var(--pl-ink);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .pricelist-print-target,
+  .pricelist-print-target * {
+    visibility: visible;
+  }
+
+  .pricelist-print-target {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-height: 100vh;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  @page {
+    margin: 0;
+    size: A4 portrait;
+  }
+}

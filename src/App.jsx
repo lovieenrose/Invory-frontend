@@ -10,6 +10,7 @@ import Inventory from './pages/Inventory';
 import IncomingStock from './pages/IncomingStock';
 import Sales from './pages/Sales';
 import Financials from './pages/Financials';
+import Pricelist from './pages/Pricelist';
 import Settings from './pages/Settings';
 
 /**
@@ -34,6 +35,7 @@ export default function App() {
                   <Route path="/inventory" element={<Inventory />} />
                   <Route path="/incoming-stock" element={<IncomingStock />} />
                   <Route path="/sales" element={<Sales />} />
+                  <Route path="/pricelist" element={<Pricelist />} />
                   <Route path="/financials" element={<Financials />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

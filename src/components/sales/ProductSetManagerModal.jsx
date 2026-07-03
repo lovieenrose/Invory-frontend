@@ -150,16 +150,30 @@ export default function ProductSetManagerModal({ open, onClose, onSaved, product
     }
   };
 
+  const buildSetPayload = (set, sortOrder) => ({
+    name: set.name,
+    color: set.color || null,
+    icon: set.icon || null,
+    sort_order: sortOrder,
+    items: (set.items || []).map((item) => ({
+      product_id: item.product_id,
+      quantity: Number(item.quantity) || 1,
+    })),
+  });
+
   const handleReorder = async (setItem, direction) => {
     const currentIndex = sortedSets.findIndex((set) => set.id === setItem.id);
-    const target = sortedSets[currentIndex + direction];
-    if (!target) return;
+    const targetIndex = currentIndex + direction;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= sortedSets.length) return;
+
+    const reordered = [...sortedSets];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
 
     try {
-      await Promise.all([
-        productSetsService.update(setItem.id, { sort_order: target.sort_order }),
-        productSetsService.update(target.id, { sort_order: setItem.sort_order }),
-      ]);
+      await Promise.all(reordered.map((set, index) => (
+        productSetsService.update(set.id, buildSetPayload(set, index))
+      )));
       toast.success('Set order updated');
       onSaved();
     } catch (err) {
