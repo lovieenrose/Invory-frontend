@@ -70,9 +70,11 @@ export const financialsService = {
 };
 
 export const uploadService = {
-  productImage: (file) => {
+  productImage: (file, options = {}) => {
     const formData = new FormData();
     formData.append('image', file);
+    if (options.categoryId) formData.append('category_id', options.categoryId);
+    if (options.categoryName) formData.append('category_name', options.categoryName);
     return api.post('/uploads/product-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

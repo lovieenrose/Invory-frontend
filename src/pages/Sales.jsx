@@ -8,7 +8,7 @@ import ProductSetQuickAccess from '../components/sales/ProductSetQuickAccess';
 import ProductSetManagerModal from '../components/sales/ProductSetManagerModal';
 import SalesHistoryTable from '../components/sales/SalesHistoryTable';
 import { useApiData } from '../hooks/useApiData';
-import { productService, productSetsService, salesService } from '../api/services';
+import { categoryService, productService, productSetsService, salesService } from '../api/services';
 
 export default function Sales() {
   const [tab, setTab] = useState('pos');
@@ -16,6 +16,7 @@ export default function Sales() {
   const [setsOpen, setSetsOpen] = useState(false);
 
   const { data: products, reload: reloadProducts } = useApiData(() => productService.list({ pageSize: 200 }), []);
+  const { data: categories } = useApiData(() => categoryService.list(), []);
   const { data: productSets, reload: reloadProductSets, loading: setsLoading } = useApiData(
     () => productSetsService.list(),
     [],
@@ -154,7 +155,7 @@ export default function Sales() {
                   onSelect={addProductSet}
                   onManage={() => setSetsOpen(true)}
                 />
-                <ProductPicker products={products} onSelect={addToCart} />
+                <ProductPicker products={products} categories={categories || []} onSelect={addToCart} />
               </div>
               <div>
                 <CartPanel
