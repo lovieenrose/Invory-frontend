@@ -36,6 +36,14 @@ export const productService = {
   listAdjustments: (id) => api.get(`/products/${id}/adjustments`),
 };
 
+export const productSetsService = {
+  list: () => api.get('/product-sets'),
+  getOne: (id) => api.get(`/product-sets/${id}`),
+  create: (payload) => api.post('/product-sets', payload),
+  update: (id, payload) => api.put(`/product-sets/${id}`, payload),
+  remove: (id) => api.delete(`/product-sets/${id}`),
+};
+
 export const incomingStockService = {
   list: (status) => api.get('/incoming-stock', { params: status ? { status } : {} }),
   getOne: (id) => api.get(`/incoming-stock/${id}`),

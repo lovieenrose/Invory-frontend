@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import Topbar from '../components/layout/Topbar';
 import { Spinner, ErrorBanner } from '../components/common/Primitives';
 import ProductPicker from '../components/sales/ProductPicker';
 import CartPanel from '../components/sales/CartPanel';
+import ProductSetQuickAccess from '../components/sales/ProductSetQuickAccess';
+import ProductSetManagerModal from '../components/sales/ProductSetManagerModal';
 import SalesHistoryTable from '../components/sales/SalesHistoryTable';
 import { useApiData } from '../hooks/useApiData';
-import { productService, salesService } from '../api/services';
+import { productService, productSetsService, salesService } from '../api/services';
 
 export default function Sales() {
   const [tab, setTab] = useState('pos');
   const [cart, setCart] = useState([]);
+  const [setsOpen, setSetsOpen] = useState(false);
 
   const { data: products, reload: reloadProducts } = useApiData(() => productService.list({ pageSize: 200 }), []);
+  const { data: productSets, reload: reloadProductSets, loading: setsLoading } = useApiData(
+    () => productSetsService.list(),
+    [],
+  );
   const {
     data: orders,
     loading: ordersLoading,
@@ -37,6 +45,65 @@ export default function Sales() {
           qty: 1,
         },
       ];
+    });
+  };
+
+  const addProductSet = (set) => {
+    const currentQty = cart.reduce((acc, item) => {
+      acc[item.id] = (acc[item.id] || 0) + item.qty;
+      return acc;
+    }, {});
+
+    const missingItems = [];
+    const outOfStock = [];
+
+    const productLookup = (products || []).reduce((acc, product) => {
+      acc[product.id] = product;
+      return acc;
+    }, {});
+
+    const toAdd = (set.items || []).map((item) => {
+      const product = productLookup[item.product_id];
+      if (!product) missingItems.push(item.product_id);
+      else if ((currentQty[item.product_id] || 0) + item.quantity > product.stock_quantity) {
+        outOfStock.push({
+          name: product.name,
+          requested: (currentQty[item.product_id] || 0) + item.quantity,
+          available: product.stock_quantity,
+        });
+      }
+      return { product, quantity: item.quantity };
+    });
+
+    if (missingItems.length) {
+      toast.error('This set includes products that are no longer available.');
+      return;
+    }
+    if (outOfStock.length) {
+      toast.error(
+        `Not enough stock for: ${outOfStock.map((item) => `${item.name} (available ${item.available})`).join(', ')}`,
+      );
+      return;
+    }
+
+    setCart((prev) => {
+      const merged = [...prev];
+      toAdd.forEach(({ product, quantity }) => {
+        const existing = merged.find((item) => item.id === product.id);
+        if (existing) {
+          existing.qty += quantity;
+        } else {
+          merged.push({
+            id: product.id,
+            name: product.name,
+            costPrice: Number(product.cost_price),
+            unitPrice: Number(product.selling_price),
+            stock: product.stock_quantity,
+            qty: quantity,
+          });
+        }
+      });
+      return merged;
     });
   };
 
@@ -77,20 +144,39 @@ export default function Sales() {
 
       <div className="px-4 md:px-8 pb-8">
         {tab === 'pos' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <ProductPicker products={products} onSelect={addToCart} />
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 space-y-4">
+                <ProductSetQuickAccess
+                  sets={productSets || []}
+                  products={products || []}
+                  loading={setsLoading}
+                  onSelect={addProductSet}
+                  onManage={() => setSetsOpen(true)}
+                />
+                <ProductPicker products={products} onSelect={addToCart} />
+              </div>
+              <div>
+                <CartPanel
+                  cart={cart}
+                  onUpdateQty={updateQty}
+                  onUpdatePrice={updatePrice}
+                  onRemove={removeItem}
+                  onCheckoutSuccess={handleCheckoutSuccess}
+                />
+              </div>
             </div>
-            <div>
-              <CartPanel
-                cart={cart}
-                onUpdateQty={updateQty}
-                onUpdatePrice={updatePrice}
-                onRemove={removeItem}
-                onCheckoutSuccess={handleCheckoutSuccess}
-              />
-            </div>
-          </div>
+            <ProductSetManagerModal
+              open={setsOpen}
+              onClose={() => setSetsOpen(false)}
+              onSaved={() => {
+                setSetsOpen(false);
+                reloadProductSets();
+              }}
+              products={products || []}
+              sets={productSets || []}
+            />
+          </>
         ) : (
           <div className="card overflow-x-auto">
             <ErrorBanner message={ordersError?.message} />

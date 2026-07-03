@@ -30,13 +30,14 @@ export function ErrorBanner({ message }) {
   );
 }
 
-export function Modal({ open, onClose, title, children, wide }) {
+export function Modal({ open, onClose, title, children, wide, size }) {
   if (!open) return null;
+  const maxWidth = size === 'xl' ? 'md:max-w-4xl' : wide ? 'md:max-w-2xl' : 'md:max-w-md';
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative bg-surface w-full ${wide ? 'md:max-w-2xl' : 'md:max-w-md'} md:rounded-xl rounded-t-2xl shadow-popover max-h-[90vh] overflow-y-auto`}
+        className={`relative bg-surface w-full ${maxWidth} md:rounded-xl rounded-t-2xl shadow-popover max-h-[90vh] overflow-y-auto`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-surface z-10">
           <h3 className="font-display font-semibold text-lg">{title}</h3>
