@@ -59,6 +59,7 @@ export const salesService = {
   summary: () => api.get('/sales/summary'),
   preview: (payload) => api.post('/sales/preview', payload),
   checkout: (payload) => api.post('/sales', payload),
+  reverse: (id, payload) => api.post(`/sales/${id}/reverse`, payload),
 };
 
 export const financialsService = {

@@ -122,6 +122,7 @@ const DRAFT_KEY = 'invory:pricelist:draft:v1';
 const LOGO_ZOOM_MIN = 80;
 const LOGO_ZOOM_MAX = 120;
 const LOGO_POSITION_STEP = 8;
+const PREVIEW_BASE_WIDTH = 960;
 
 const STOCK_STYLES = [
   { value: 'strike', label: 'Strikethrough' },
@@ -426,7 +427,6 @@ async function renderPricelistImage({ info, sections, template, stockStyle, expo
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 30px Inter, Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('↑', logoX + logoSize / 2, logoY + 58);
     ctx.fillStyle = template.ink;
     ctx.font = '900 14px Inter, Arial, sans-serif';
     ctx.fillText('UPLOAD LOGO', logoX + logoSize / 2, logoY + 120);
@@ -869,15 +869,15 @@ export default function Pricelist() {
           </div>
         }
       />
-
+      <br></br>
       <div className="px-4 md:px-8 pb-8">
         <ErrorBanner message={productsError?.message} />
 
         {productsLoading && !products ? (
           <Spinner label="Building your pricelist workspace..." />
         ) : (
-          <div className="grid grid-cols-1 2xl:grid-cols-[360px_1fr] gap-5">
-            <aside className="card overflow-hidden 2xl:sticky 2xl:top-5 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto">
+          <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-5">
+            <aside className="card overflow-hidden xl:sticky xl:top-5 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
               <div className="grid grid-cols-3 border-b border-border bg-paper/70">
                 {[
                   { value: 'content', label: 'Content', icon: FileText },
@@ -895,7 +895,7 @@ export default function Pricelist() {
                       }`}
                     >
                       <Icon size={14} />
-                      <span className="hidden sm:inline 2xl:hidden 3xl:inline">{tab.label}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                   );
                 })}
@@ -1160,11 +1160,13 @@ export default function Pricelist() {
               )}
             </aside>
 
-            <main className="space-y-4">
-              <FeatureStrip />
+            <main className="space-y-4 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
               <div className="card p-4 overflow-auto bg-paper/60">
                 {visibleSections.length ? (
-                  <div className="mx-auto pricelist-preview-shell" style={{ width: zoom === 'fit' ? 'min(100%, 760px)' : `${Number(zoom) * 7.6}px` }}>
+                  <div
+                    className="mx-auto pricelist-preview-shell"
+                    style={{ width: zoom === 'fit' ? `min(100%, ${PREVIEW_BASE_WIDTH}px)` : `${(Number(zoom) / 100) * PREVIEW_BASE_WIDTH}px` }}
+                  >
                     <PosterPreview
                       info={info}
                       sections={visibleSections}
@@ -1552,27 +1554,6 @@ function SummaryTile({ label, value }) {
     <div className="rounded-xl border border-border bg-paper p-3">
       <p className="text-xs text-ink-faint">{label}</p>
       <p className="mt-1 text-xl font-black text-ink tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function FeatureStrip() {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[
-        ['Fully Editable', 'Edit text, sections, prices, badges, and layout.'],
-        ['Inventory Synced', 'Products load directly from inventory.'],
-        ['Out of Stock', 'Strike, fade, or hide unavailable items.'],
-        ['Export Ready', 'Print or save the poster as PDF from your browser.'],
-      ].map(([title, description]) => (
-        <div key={title} className="rounded-xl border border-border bg-surface p-4">
-          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-            <Sparkles size={16} />
-          </div>
-          <p className="text-sm font-black text-ink">{title}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-soft">{description}</p>
-        </div>
-      ))}
     </div>
   );
 }

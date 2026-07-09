@@ -118,6 +118,23 @@ export default function Sales() {
     reloadOrders();
   };
 
+  const handleReverseSale = async (order) => {
+    const reason = window.prompt(
+      `Reverse sale ${order.order_number}? Stock will be returned and this sale will be marked reversed.\n\nReason (optional):`,
+      'Entry error',
+    );
+    if (reason === null) return;
+
+    try {
+      await salesService.reverse(order.id, { reason });
+      toast.success('Sale reversed and stock restored');
+      reloadOrders();
+      reloadProducts();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   return (
     <div>
       <Topbar
@@ -163,6 +180,7 @@ export default function Sales() {
                   onUpdateQty={updateQty}
                   onUpdatePrice={updatePrice}
                   onRemove={removeItem}
+                  onClear={() => setCart([])}
                   onCheckoutSuccess={handleCheckoutSuccess}
                 />
               </div>
@@ -181,7 +199,11 @@ export default function Sales() {
         ) : (
           <div className="card overflow-x-auto">
             <ErrorBanner message={ordersError?.message} />
-            {ordersLoading ? <Spinner /> : <SalesHistoryTable orders={orders} loading={ordersLoading} />}
+            {ordersLoading ? (
+              <Spinner />
+            ) : (
+              <SalesHistoryTable orders={orders} loading={ordersLoading} onReverse={handleReverseSale} />
+            )}
           </div>
         )}
       </div>
