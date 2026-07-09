@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { Clipboard, Eye, RotateCcw, Receipt, X } from 'lucide-react';
+import { Clipboard, Download, Eye, FileText, Image, RotateCcw, Receipt, X } from 'lucide-react';
 import { EmptyState, Badge } from '../common/Primitives';
 import { formatCurrency, formatDateTime } from '../../utils/format';
+import {
+  buildOrderDocumentFromOrder,
+  downloadDataUrl,
+  getOrderArtifact,
+  renderInvoicePng,
+} from '../../utils/salesDocuments';
 
 export default function SalesHistoryTable({ orders, loading, onReverse }) {
   const [receiptData, setReceiptData] = useState(null);
+  const [detailsData, setDetailsData] = useState(null);
 
   if (!loading && !orders?.length) {
     return <EmptyState icon={Receipt} title="No sales yet" description="Completed sales will appear here with full profit breakdowns." />;
@@ -32,6 +39,7 @@ export default function SalesHistoryTable({ orders, loading, onReverse }) {
         <tbody>
           {orders?.map((o) => {
             const reversed = (o.notes || '').startsWith('[REVERSED]');
+            const invoice = buildOrderDocumentFromOrder(o);
             return (
               <tr key={o.id} className={reversed ? 'opacity-65' : ''}>
                 <td className="font-medium text-ink">{o.order_number}</td>
@@ -48,11 +56,32 @@ export default function SalesHistoryTable({ orders, loading, onReverse }) {
                   <Badge tone={o.margin_pct >= 30 ? 'success' : o.margin_pct >= 10 ? 'warning' : 'danger'}>{o.margin_pct}%</Badge>
                 </td>
                 <td>
-                  <div className="flex justify-end gap-1">
+                  <div className="flex flex-wrap justify-end gap-1">
                     <button
                       type="button"
                       className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
-                      onClick={() => setReceiptData(buildReceiptData(o))}
+                      onClick={() => downloadInvoiceForOrder(o)}
+                    >
+                      <Download size={13} /> Invoice
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
+                      onClick={() => downloadPaymentReceiptForOrder(o)}
+                    >
+                      <Image size={13} /> Proof
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-ink-soft hover:bg-paper"
+                      onClick={() => setDetailsData(invoice)}
+                    >
+                      <FileText size={13} /> Details
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
+                      onClick={() => setReceiptData(invoice)}
                     >
                       <Eye size={13} /> Receipt
                     </button>
@@ -74,8 +103,26 @@ export default function SalesHistoryTable({ orders, loading, onReverse }) {
       </table>
 
       {receiptData && <ReceiptModal receipt={receiptData} onClose={() => setReceiptData(null)} />}
+      {detailsData && <OrderDetailsModal invoice={detailsData} onClose={() => setDetailsData(null)} />}
     </>
   );
+}
+
+async function downloadInvoiceForOrder(order) {
+  const invoice = buildOrderDocumentFromOrder(order);
+  const artifact = getOrderArtifact(order.id);
+  const dataUrl = artifact?.invoicePng || await renderInvoicePng(invoice);
+  downloadDataUrl(dataUrl, `${invoice.invoiceNumber}.png`);
+}
+
+function downloadPaymentReceiptForOrder(order) {
+  const artifact = getOrderArtifact(order.id);
+  if (!artifact?.paymentReceipt?.dataUrl) {
+    toast.error('No payment receipt saved for this order.');
+    return;
+  }
+  const extension = artifact.paymentReceipt.name?.split('.').pop() || 'png';
+  downloadDataUrl(artifact.paymentReceipt.dataUrl, `${order.order_number}-payment-receipt.${extension}`);
 }
 
 function ReceiptModal({ receipt, onClose }) {
@@ -110,59 +157,11 @@ function ReceiptModal({ receipt, onClose }) {
   );
 }
 
-function paymentLabel(value) {
-  return {
-    maya: 'Maya',
-    maribank: 'Maribank',
-    gotyme: 'GoTyme',
-    gcash: 'GCash',
-    bpi: 'BPI',
-    cash: 'Cash',
-    others: 'Others',
-  }[value] || value || 'N/A';
-}
-
-function getShippingFee(order) {
-  const match = String(order.notes || '').match(/\[SHIPPING_FEE:([0-9.]+)\]/);
-  return match ? Number(match[1]) || 0 : 0;
-}
-
-function getDiscountTypeLabel(order) {
-  const value = String(order.notes || '').match(/\[DISCOUNT_TYPE:([a-z_]+)\]/)?.[1];
-  return {
-    complete_set: 'Complete Set discount',
-    duo_set: 'Duo set Discount',
-    promo: 'Promo discount',
-  }[value] || 'Discount';
-}
-
-function buildReceiptData(order) {
-  const shipping = getShippingFee(order);
-  const subtotal = Number(order.subtotal) || Math.max(0, Number(order.total || 0) + Number(order.discount || 0) - shipping);
-  return {
-    orderNumber: order.order_number,
-    customerName: order.customer_name || 'Walk-in',
-    date: formatDateTime(order.created_at),
-    paymentLabel: paymentLabel(order.payment_method),
-    items: (order.items || []).map((item) => ({
-      id: item.id,
-      name: item.product_name,
-      quantity: item.quantity,
-      amount: Number(item.line_revenue) || 0,
-    })),
-    subtotal,
-    shipping,
-    discount: Number(order.discount) || 0,
-    discountTypeLabel: getDiscountTypeLabel(order),
-    total: Number(order.total) || 0,
-  };
-}
-
 function receiptToText(receipt) {
   return [
     'CUSTOMER COPY',
-    `Order #: ${receipt.orderNumber}`,
-    receipt.date ? `Date: ${receipt.date}` : null,
+    `Invoice #: ${receipt.invoiceNumber}`,
+    receipt.invoiceDate ? `Date: ${formatDateTime(receipt.invoiceDate)}` : null,
     `Customer: ${receipt.customerName}`,
     `Payment: ${receipt.paymentLabel}`,
     '',
@@ -185,8 +184,8 @@ function ReceiptCard({ receipt }) {
       </div>
       <div className="my-4 border-t border-dashed border-border" />
       <div className="space-y-1 text-xs">
-        <ReceiptRow label="Order" value={receipt.orderNumber} />
-        {receipt.date && <ReceiptRow label="Date" value={receipt.date} />}
+        <ReceiptRow label="Invoice" value={receipt.invoiceNumber} />
+        {receipt.invoiceDate && <ReceiptRow label="Date" value={formatDateTime(receipt.invoiceDate)} />}
         <ReceiptRow label="Customer" value={receipt.customerName} />
         <ReceiptRow label="Payment" value={receipt.paymentLabel} />
       </div>
@@ -216,6 +215,52 @@ function ReceiptCard({ receipt }) {
       </div>
       <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-ink-soft">Thank you for your purchase</p>
     </div>
+  );
+}
+
+function OrderDetailsModal({ invoice, onClose }) {
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/50 px-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface p-5 shadow-card">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-ink">Order Details</h3>
+            <p className="text-sm text-ink-soft">{invoice.invoiceNumber}</p>
+          </div>
+          <button type="button" className="p-1.5 text-ink-faint hover:text-ink" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="grid gap-3 rounded-xl border border-border bg-paper p-4 text-sm sm:grid-cols-2">
+          <ReceiptRow label="Customer" value={invoice.customerName} />
+          <ReceiptRow label="Payment" value={invoice.paymentLabel} />
+          <ReceiptRow label="Invoice Date" value={formatDateTime(invoice.invoiceDate)} />
+          <ReceiptRow label="Payment Date" value={invoice.paymentDate ? formatDateTime(invoice.paymentDate) : 'N/A'} />
+        </div>
+
+        <div className="mt-4 max-h-72 overflow-auto rounded-xl border border-border">
+          {invoice.items.map((item) => (
+            <div key={item.id} className="grid grid-cols-[1fr_60px_100px_100px] gap-2 border-b border-border px-3 py-2 text-sm last:border-b-0">
+              <span className="font-medium">{item.name}</span>
+              <span className="text-center">{item.quantity}</span>
+              <span className="text-right">{formatCurrency(item.unitPrice)}</span>
+              <span className="text-right font-semibold">{formatCurrency(item.amount)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 ml-auto max-w-sm space-y-1 text-sm">
+          <ReceiptRow label="Subtotal" value={formatCurrency(invoice.subtotal)} />
+          <ReceiptRow label="Shipping" value={formatCurrency(invoice.shipping)} />
+          <ReceiptRow label={invoice.discount > 0 ? invoice.discountTypeLabel : 'Discount'} value={`-${formatCurrency(invoice.discount)}`} />
+          <div className="border-t border-border pt-2">
+            <ReceiptRow label="Total" value={formatCurrency(invoice.total)} />
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -177,6 +177,7 @@ export default function Sales() {
               <div>
                 <CartPanel
                   cart={cart}
+                  products={products || []}
                   onUpdateQty={updateQty}
                   onUpdatePrice={updatePrice}
                   onRemove={removeItem}
