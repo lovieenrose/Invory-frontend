@@ -939,7 +939,7 @@ function InvoicePreview({ invoice, bannerUrl }) {
   return (
     <div className="mx-auto aspect-square min-w-[680px] max-w-3xl rounded-3xl border border-pink-200 bg-white p-8 text-ink shadow-sm">
       <div className="flex items-start justify-between gap-6">
-        <div className="h-32 w-[440px] overflow-hidden bg-white">
+        <div className="h-44 w-[560px] overflow-hidden bg-white">
           <img src={bannerUrl || INVOICE_BANNER_URL} alt="Invoice banner" className="h-full w-full object-contain" />
         </div>
         <div className="text-right">
@@ -965,12 +965,21 @@ function InvoicePreview({ invoice, bannerUrl }) {
         {invoice.items.map((item) => (
           <div key={item.id} className="grid grid-cols-[1fr_70px_110px_110px] gap-3 border-b border-border px-4 py-3 text-sm last:border-b-0">
             <span className="font-semibold">
-              {item.name}
-              {item.isFreeItem && (
-                <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-700">
-                  FREE ITEM
-                </span>
-              )}
+              <span className="inline-flex flex-wrap items-baseline gap-1.5 leading-snug">
+                <span>{item.name}</span>
+                {item.isFreeItem && (
+                  <>
+                    <span className="inline-flex items-center rounded-full bg-[#FF4F9A] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white" style={{ verticalAlign: 'middle', position: 'relative', top: '-1px' }}>
+                      FREE ITEM
+                    </span>
+                    {item.regularPrice > 0 && (
+                      <span className="text-[10px] font-medium text-gray-400">
+                        (Regular Price {formatCurrency(item.regularPrice)})
+                      </span>
+                    )}
+                  </>
+                )}
+              </span>
             </span>
             <span className="text-center">{item.quantity}</span>
             <span className="text-right tabular-nums">{formatCurrency(item.unitPrice)}</span>

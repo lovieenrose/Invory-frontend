@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { Clipboard, Download, Eye, FileText, Image, RotateCcw, Receipt, X } from 'lucide-react';
+import { Clipboard, CreditCard, Download, Eye, FileText, Image, RotateCcw, Receipt, X } from 'lucide-react';
 import { EmptyState, Badge } from '../common/Primitives';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import {
@@ -10,10 +10,12 @@ import {
   getOrderArtifact,
   renderInvoicePng,
 } from '../../utils/salesDocuments';
+import DigitalReceiptModal from './DigitalReceiptModal';
 
 export default function SalesHistoryTable({ orders, loading, onReverse }) {
   const [receiptData, setReceiptData] = useState(null);
   const [detailsData, setDetailsData] = useState(null);
+  const [digitalReceiptOrder, setDigitalReceiptOrder] = useState(null);
 
   if (!loading && !orders?.length) {
     return <EmptyState icon={Receipt} title="No sales yet" description="Completed sales will appear here with full profit breakdowns." />;
@@ -87,6 +89,14 @@ export default function SalesHistoryTable({ orders, loading, onReverse }) {
                     </button>
                     <button
                       type="button"
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-[#FF4F9A] hover:bg-pink-50"
+                      onClick={() => setDigitalReceiptOrder(o)}
+                      title="Generate and download a premium digital receipt PNG"
+                    >
+                      <CreditCard size={13} /> Digital Receipt
+                    </button>
+                    <button
+                      type="button"
                       className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-rust-600 hover:bg-rust-50 disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={reversed}
                       onClick={() => onReverse?.(o)}
@@ -104,6 +114,9 @@ export default function SalesHistoryTable({ orders, loading, onReverse }) {
 
       {receiptData && <ReceiptModal receipt={receiptData} onClose={() => setReceiptData(null)} />}
       {detailsData && <OrderDetailsModal invoice={detailsData} onClose={() => setDetailsData(null)} />}
+      {digitalReceiptOrder && (
+        <DigitalReceiptModal order={digitalReceiptOrder} onClose={() => setDigitalReceiptOrder(null)} />
+      )}
     </>
   );
 }
